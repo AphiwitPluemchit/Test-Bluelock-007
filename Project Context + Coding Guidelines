@@ -1,0 +1,434 @@
+# Project Context + Coding Guidelines
+
+## 📋 Project Overview
+
+**Project Name:** Test-Bluelock-007  
+**Testing Framework:** Cypress (v14.5.4)  
+**Project Type:** End-to-End (E2E) Testing Suite  
+**Language:** JavaScript/TypeScript  
+
+## 🎯 Project Objectives
+
+This project is dedicated to comprehensive end-to-end testing using Cypress. The primary goals are:
+
+- **Quality Assurance:** Ensure application reliability and user experience
+- **Regression Prevention:** Catch bugs before they reach production
+- **Documentation:** Tests serve as living documentation of application behavior
+- **Confidence:** Enable safe deployments with comprehensive test coverage
+
+## 🏗️ Project Structure
+
+```
+Test-Bluelock-007/
+├── cypress/
+│   ├── e2e/           # Test specifications
+│   │    ├── login/   
+│   │    ├── admin/     
+│   │    │    ├── calendar/     
+│   │    ├── student/    
+│   │    │    ├── calendar/     
+│   ├── fixtures/      # Test data files
+│   ├── support/       # Custom commands and utilities
+│   └── downloads/     # Downloaded files during tests
+├── cypress.config.js  # Cypress configuration
+└── package.json       # Project dependencies
+```
+
+## 📝 Coding Guidelines
+
+### 1. Test File Naming Convention
+
+**Format:** `[feature-name].cy.js` or `[feature-name].cy.ts`
+
+**Examples:**
+- `login.cy.js`
+- `user-registration.cy.js`
+- `product-catalog.cy.js`
+- `checkout-flow.cy.js`
+
+### 2. Test Structure and Organization
+
+#### Basic Test Structure
+```javascript
+describe('Feature Name', () => {
+  beforeEach(() => {
+    // Setup code - runs before each test
+    cy.visit('/')
+  })
+
+  afterEach(() => {
+    // Cleanup code - runs after each test
+    cy.clearCookies()
+    cy.clearLocalStorage()
+  })
+
+  it('should perform specific action', () => {
+    // Test implementation
+  })
+
+  it('should handle error scenarios', () => {
+    // Error handling test
+  })
+})
+```
+
+#### Test Organization Principles
+- **One feature per describe block**
+- **One assertion per test case** (when possible)
+- **Clear, descriptive test names**
+- **Logical grouping of related tests**
+
+### 3. Naming Conventions
+
+#### Test Descriptions
+- **Use descriptive, behavior-focused names**
+- **Start with "should" or "when"**
+- **Be specific about expected outcomes**
+
+**Good Examples:**
+```javascript
+it('should display error message for invalid email', () => {})
+it('should redirect to dashboard after successful login', () => {})
+it('should save user preferences to localStorage', () => {})
+```
+
+**Bad Examples:**
+```javascript
+it('test login', () => {})
+it('works', () => {})
+it('should work', () => {})
+```
+
+#### Variable and Function Names
+- **Use camelCase for variables and functions**
+- **Use descriptive names that explain purpose**
+- **Prefix custom commands with meaningful names**
+
+```javascript
+// Good
+const userCredentials = { email: 'test@example.com', password: 'password123' }
+const submitLoginForm = () => { /* implementation */ }
+
+// Bad
+const data = { email: 'test@example.com', password: 'password123' }
+const submit = () => { /* implementation */ }
+```
+
+### 4. Selectors and Element Targeting
+
+#### Selector Priority (Best to Worst)
+1. **Data attributes** (recommended)
+2. **ID attributes**
+3. **Class names** (semantic classes)
+4. **Text content**
+5. **CSS selectors**
+
+**Examples:**
+```javascript
+// Best - Data attributes
+cy.get('[data-testid="login-button"]').click()
+cy.get('[data-cy="email-input"]').type('test@example.com')
+
+// Good - ID attributes
+cy.get('#login-form').should('be.visible')
+
+// Acceptable - Semantic classes
+cy.get('.btn-primary').click()
+
+// Avoid - Generic selectors
+cy.get('button').click()
+cy.get('input').type('test@example.com')
+```
+
+### 5. Assertions and Expectations
+
+#### Assertion Best Practices
+- **Use explicit assertions** rather than implicit ones
+- **Assert one thing at a time**
+- **Use descriptive assertion messages**
+
+```javascript
+// Good - Explicit assertions
+cy.get('[data-testid="success-message"]')
+  .should('be.visible')
+  .and('contain.text', 'Login successful')
+
+// Good - Multiple specific assertions
+cy.get('[data-testid="user-email"]').should('contain', 'test@example.com')
+cy.get('[data-testid="user-name"]').should('contain', 'John Doe')
+
+// Avoid - Implicit assertions
+cy.get('[data-testid="success-message"]').should('exist')
+```
+
+#### Common Assertion Patterns
+```javascript
+// Visibility and state
+cy.get('[data-testid="element"]').should('be.visible')
+cy.get('[data-testid="element"]').should('not.exist')
+cy.get('[data-testid="element"]').should('be.disabled')
+
+// Content and text
+cy.get('[data-testid="element"]').should('contain.text', 'Expected text')
+cy.get('[data-testid="element"]').should('have.value', 'Expected value')
+
+// URL and navigation
+cy.url().should('include', '/dashboard')
+cy.url().should('eq', 'https://example.com/dashboard')
+```
+
+### 6. Test Data Management
+
+#### Fixtures Usage
+- **Store test data in `cypress/fixtures/`**
+- **Use descriptive fixture names**
+- **Keep fixtures focused and reusable**
+
+```javascript
+// fixtures/users.json
+{
+  "validUser": {
+    "email": "test@example.com",
+    "password": "password123",
+    "name": "Test User"
+  },
+  "invalidUser": {
+    "email": "invalid@example.com",
+    "password": "wrongpassword"
+  }
+}
+
+// In test file
+beforeEach(() => {
+  cy.fixture('users').then((users) => {
+    this.validUser = users.validUser
+    this.invalidUser = users.invalidUser
+  })
+})
+```
+
+#### Dynamic Data Generation
+```javascript
+// Generate unique test data
+const uniqueEmail = `test-${Date.now()}@example.com`
+const uniqueUsername = `user-${Math.random().toString(36).substr(2, 9)}`
+```
+
+### 7. Custom Commands
+
+#### Creating Custom Commands
+- **Place in `cypress/support/commands.js`**
+- **Use descriptive names**
+- **Include proper documentation**
+
+```javascript
+// cypress/support/commands.js
+Cypress.Commands.add('login', (email, password) => {
+  cy.visit('/login')
+  cy.get('[data-testid="email-input"]').type(email)
+  cy.get('[data-testid="password-input"]').type(password)
+  cy.get('[data-testid="login-button"]').click()
+  cy.url().should('include', '/dashboard')
+})
+
+Cypress.Commands.add('logout', () => {
+  cy.get('[data-testid="logout-button"]').click()
+  cy.url().should('include', '/login')
+})
+```
+
+#### Using Custom Commands
+```javascript
+it('should login and access protected page', () => {
+  cy.login('test@example.com', 'password123')
+  cy.visit('/protected-page')
+  cy.get('[data-testid="protected-content"]').should('be.visible')
+})
+```
+
+### 8. Error Handling and Edge Cases
+
+#### Testing Error Scenarios
+```javascript
+it('should handle network errors gracefully', () => {
+  cy.intercept('POST', '/api/login', { forceNetworkError: true })
+  cy.login('test@example.com', 'password123')
+  cy.get('[data-testid="error-message"]')
+    .should('be.visible')
+    .and('contain.text', 'Network error')
+})
+
+it('should validate required fields', () => {
+  cy.visit('/login')
+  cy.get('[data-testid="login-button"]').click()
+  cy.get('[data-testid="email-error"]').should('be.visible')
+  cy.get('[data-testid="password-error"]').should('be.visible')
+})
+```
+
+#### Timeout and Retry Strategies
+```javascript
+// Custom timeout for slow operations
+cy.get('[data-testid="slow-loading-element"]', { timeout: 10000 }).should('be.visible')
+
+// Retry with custom logic
+cy.get('[data-testid="dynamic-content"]').should(($el) => {
+  expect($el.text()).to.not.be.empty
+})
+```
+
+### 9. Performance and Best Practices
+
+#### Test Performance
+- **Minimize unnecessary waits**
+- **Use proper assertions instead of arbitrary delays**
+- **Group related tests to reduce setup/teardown overhead**
+
+```javascript
+// Good - Wait for specific condition
+cy.get('[data-testid="loading-spinner"]').should('not.exist')
+cy.get('[data-testid="content"]').should('be.visible')
+
+// Avoid - Arbitrary delays
+cy.wait(2000)
+```
+
+#### Code Reusability
+- **Extract common setup into beforeEach hooks**
+- **Create utility functions for repeated operations**
+- **Use page object pattern for complex applications**
+
+```javascript
+// Page Object Pattern Example
+class LoginPage {
+  visit() {
+    cy.visit('/login')
+  }
+  
+  fillCredentials(email, password) {
+    cy.get('[data-testid="email-input"]').type(email)
+    cy.get('[data-testid="password-input"]').type(password)
+  }
+  
+  submit() {
+    cy.get('[data-testid="login-button"]').click()
+  }
+  
+  login(email, password) {
+    this.visit()
+    this.fillCredentials(email, password)
+    this.submit()
+  }
+}
+
+const loginPage = new LoginPage()
+```
+
+### 10. Documentation and Comments
+
+#### Code Comments
+- **Explain complex test logic**
+- **Document business rules and requirements**
+- **Use JSDoc for custom commands**
+
+```javascript
+/**
+ * Tests the complete user registration flow
+ * Includes email verification and profile setup
+ */
+describe('User Registration Flow', () => {
+  it('should complete full registration process', () => {
+    // Step 1: Fill registration form
+    cy.get('[data-testid="registration-form"]').within(() => {
+      cy.get('[data-testid="name-input"]').type('John Doe')
+      cy.get('[data-testid="email-input"]').type('john@example.com')
+      cy.get('[data-testid="password-input"]').type('securePassword123')
+    })
+    
+    // Step 2: Submit and verify email
+    cy.get('[data-testid="submit-button"]').click()
+    cy.get('[data-testid="verification-message"]').should('be.visible')
+  })
+})
+```
+
+### 11. Configuration and Environment
+
+#### Environment-Specific Testing
+```javascript
+// cypress.config.js
+module.exports = defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:3000',
+    env: {
+      apiUrl: 'http://localhost:8000/api',
+      testUser: 'test@example.com',
+      testPassword: 'password123'
+    },
+    setupNodeEvents(on, config) {
+      // implement node event listeners here
+    },
+  },
+})
+```
+
+#### Using Environment Variables
+```javascript
+// In tests
+cy.visit(Cypress.env('baseUrl'))
+cy.request('POST', `${Cypress.env('apiUrl')}/login`, {
+  email: Cypress.env('testUser'),
+  password: Cypress.env('testPassword')
+})
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn package manager
+
+### Installation
+```bash
+npm install
+```
+
+### Running Tests
+```bash
+# Open Cypress Test Runner
+npx cypress open
+
+# Run tests in headless mode
+npx cypress run
+
+# Run specific test file
+npx cypress run --spec "cypress/e2e/login.cy.js"
+```
+
+### Development Workflow
+1. **Write test specifications** in `cypress/e2e/`
+2. **Add test data** to `cypress/fixtures/`
+3. **Create custom commands** in `cypress/support/commands.js`
+4. **Run tests** to verify functionality
+5. **Commit changes** with descriptive commit messages
+
+## 📚 Additional Resources
+
+- [Cypress Documentation](https://docs.cypress.io/)
+- [Cypress Best Practices](https://docs.cypress.io/guides/references/best-practices)
+- [Testing Strategies](https://docs.cypress.io/guides/core-concepts/testing-strategies)
+
+## 🤝 Contributing
+
+When contributing to this test suite:
+
+1. **Follow the coding guidelines** outlined above
+2. **Write comprehensive test coverage** for new features
+3. **Update documentation** when adding new test utilities
+4. **Ensure all tests pass** before submitting changes
+5. **Use descriptive commit messages** following conventional commits
+
+---
+
+**Last Updated:** December 2024  
+**Version:** 1.0.0
