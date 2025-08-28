@@ -1,3 +1,7 @@
+start-project
+npm insstall
+npx cypress open
+
 # Project Context + Coding Guidelines
 
 ## 📋 Project Overview
